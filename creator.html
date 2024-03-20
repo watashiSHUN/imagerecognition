@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta name="viewport" content="width=device-width, maximum-scale=0.9, user-scalable=0">
     <title>Data Creator</title>
     <link rel="stylesheet" href="styles.css">
   </head>
@@ -10,16 +11,11 @@
       <br>
       <div id="sketchPadContainer"></div>
     </div>
+    <script src="js/draw.js"></script>
     <script src="js/sketch.js"></script>
     <script>
       // initialized
       const sketchPad = new SketchPad(sketchPadContainer);
-      function draw() {
-        // TODO: clear the sketchPad
-        sketchPad.draw();
-        requestAnimationFrame(draw);
-      }
-      draw();
     </script>
   </body>
 </html>

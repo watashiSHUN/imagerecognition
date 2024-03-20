@@ -20,43 +20,48 @@ class SketchPad{
         // NOTE: instead of document.onmousemove, we use this.canvas.onmousemove
         // NOTE: `onmousedown` only record once the mouse is pressed, moving while pressed is not recorded
         this.canvas.onmousedown = (e) => {
-            // e being the mouse event
-            const rect = this.canvas.getBoundingClientRect();
-            // Get relative mouse position inside the canvas
-            // NOTE: first point of a segment
-            const mouse = [
-                Math.round(e.clientX - rect.left), 
-                Math.round(e.clientY - rect.top)
-            ];
+            const mouse = this.#getMouse(e);
             this.mouseDown = true;
+            // NOTE: first point of a segment
             this.pixels.push([mouse]);
         };
 
-        // NOTE: every time we lift the mouse, we insert a break point => 2 segments are disjoint
-        this.canvas.onmouseup= (e) => {
-            const rect = this.canvas.getBoundingClientRect();
-            // NOTE: last segment of a segment
-            const mouse = [
-                Math.round(e.clientX - rect.left), 
-                Math.round(e.clientY - rect.top)
-            ];
-            this.mouseDown = false;
-            this.pixels[this.pixels.length-1].push(mouse);
-        }
         // TODO: how often does this event fire?
         this.canvas.onmousemove = (e) => { 
             if(this.mouseDown){
-                const rect = this.canvas.getBoundingClientRect();
-                const mouse = [
-                    Math.round(e.clientX - rect.left), 
-                    Math.round(e.clientY - rect.top)
-                ];
+                const mouse = this.#getMouse(e);
                 this.pixels[this.pixels.length-1].push(mouse);
-                // TODO: call draw?
+                //this.#drawLine();
+                this.#reDraw();
             }
+        };
+
+        // NOTE: every time we lift the mouse, we insert a break point => 2 segments are disjoint
+        this.canvas.onmouseup= () => {
+            this.mouseDown = false;
+        }
+
+        // Touch events for mobile devices
+        this.canvas.ontouchstart = (e) => {
+            // get the fist event in case of multi-touch
+            const touch_event = e.touches[0];
+            // TODO: touch_event is the same as mouse_event? or they share the same fields
+            // NOTE: manually trigger mousedown event
+            this.canvas.onmousedown(touch_event);
+        };
+
+        this.canvas.ontouchmove = (e) => { 
+            const touch_event = e.touches[0];
+            this.canvas.onmousemove(touch_event);
+        };
+
+        this.canvas.ontouchend = () => {
+            this.canvas.onmouseup();
         };
     }
 
+    // e being the mouse event
+    // Get relative mouse position inside the canvas
     #getMouse=(e)=>{
         const rect = this.canvas.getBoundingClientRect();
         return [
@@ -65,23 +70,32 @@ class SketchPad{
         ];
     }
 
-    // Driver code can repeatedly call this method
-    draw(){
-        // connect dots
-        this.pixels.forEach(segment => {
-            this.ctx.beginPath();
-            // draw dot
-            if (segment.length == 1){
-                this.ctx.arc(segment[0][0], segment[0][1], 1, 0, 2 * Math.PI);
-                this.ctx.fill();
-                return;
-            }
+    // Connect last 2 dots in the pixels
+    #drawLine(){
+        if (this.pixels.length < 1){
+            // nothing to draw
+            return;
+        }
+        const last_segment = this.pixels[this.pixels.length-1];
+        if (last_segment.length < 2){
+            // draw a dot
+            this.ctx.arc(segment[0][0], segment[0][1], 1, 0, 2 * Math.PI);
+            this.ctx.fill();
+            return;
+        }
+        const start = last_segment[last_segment.length-2];
+        const end = last_segment[last_segment.length-1];
 
-            for (let i = 0; i < segment.length-1; i++){
-                this.ctx.moveTo(segment[i][0], segment[i][1]);
-                this.ctx.lineTo(segment[i+1][0], segment[i+1][1]);
-            }
-            this.ctx.stroke();
-        });
+        this.ctx.beginPath();
+        this.ctx.moveTo(start[0], start[1]);
+        this.ctx.lineTo(end[0], end[1]);
+        this.ctx.stroke();
+    }
+
+    #reDraw(){
+        // Clear the canvas first
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // utility object
+        draw.path(this.ctx, this.pixels);
     }
 }
