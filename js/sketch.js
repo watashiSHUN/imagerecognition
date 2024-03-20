@@ -1,18 +1,46 @@
 class SketchPad{
     constructor(div, size=400){
-        this.canvas = document.createElement('canvas');
-        this.canvas.width = size;
-        this.canvas.height = size;
-        this.canvas.style = `
-            background-color: white;
-            box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.75);`;
+        //---Sketch Pad Outline---
+        this.canvas = this.#createCanvas(size);
         div.appendChild(this.canvas);
+        const lineBreak = document.createElement('br');
+        div.appendChild(lineBreak);
+        this.undoButton = this.#createUndoButton();
+        div.appendChild(this.undoButton);
+        //---Sketch Pad Outline---
 
         this.ctx = this.canvas.getContext('2d');
         this.#addEventListeners();
         
+        // Array of segments, each segment is an array of points
+        // [
+        //  [[x1,y1], [x2,y2], [x3,y3], ...
+        //  [[x1,y1], [x2,y2], [x3,y3], ...
+        // ...
+        // ]
         this.pixels = [];
         this.mouseDown = false;
+    }
+
+    #createCanvas(size){
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        canvas.style = `
+            background-color: white;
+            box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.75);`;
+        return canvas;
+    }
+
+    // when its clicked, remove the last segment
+    #createUndoButton(){
+        const undo = document.createElement('button');
+        undo.innerHTML = "UNDO";
+        undo.onclick = () => {
+            this.pixels.pop();
+            this.#reDraw();
+        };
+        return undo;
     }
    
     #addEventListeners(){
@@ -45,7 +73,7 @@ class SketchPad{
         this.canvas.ontouchstart = (e) => {
             // get the fist event in case of multi-touch
             const touch_event = e.touches[0];
-            // TODO: touch_event is the same as mouse_event? or they share the same fields
+            // touch_event and mouse_event share the some fields
             // NOTE: manually trigger mousedown event
             this.canvas.onmousedown(touch_event);
         };
