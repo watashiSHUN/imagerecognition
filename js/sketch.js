@@ -7,6 +7,8 @@ class SketchPad{
         div.appendChild(lineBreak);
         this.undoButton = this.#createUndoButton();
         div.appendChild(this.undoButton);
+        // initially disabled
+        this.undoButton.disabled = true;
         //---Sketch Pad Outline---
 
         this.ctx = this.canvas.getContext('2d');
@@ -37,6 +39,7 @@ class SketchPad{
         const undo = document.createElement('button');
         undo.innerHTML = "UNDO";
         undo.onclick = () => {
+            // NOTE: when there's no pixels, the "undo" button should be grayed out
             this.pixels.pop();
             this.#reDraw();
         };
@@ -125,5 +128,10 @@ class SketchPad{
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         // utility object
         draw.path(this.ctx, this.pixels);
+        if (this.pixels.length === 0){
+            this.undoButton.disabled = true;
+        } else {
+            this.undoButton.disabled = false;
+        }
     }
 }
